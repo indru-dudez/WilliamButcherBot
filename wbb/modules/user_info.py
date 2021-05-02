@@ -20,8 +20,8 @@ async def get_user_info(user):
     is_gbanned = await is_gbanned_user(user_id)
     is_sudo = user_id in SUDOERS
     karma = await user_global_karma(user_id)
-    banned_in_spamwatch = False if spamwatch.get_ban(
-        user_id) == False else True
+    banned_in_spamwatch = spamwatch.get_ban(
+        user_id) != False
     caption = f"""
 **ID:** `{user_id}`
 **DC:** {dc_id}
@@ -42,9 +42,9 @@ async def info_func(_, message):
     try:
         if message.reply_to_message:
             user = message.reply_to_message.from_user.id
-        elif not message.reply_to_message and len(message.command) == 1:
+        elif len(message.command) == 1:
             user = message.from_user.id
-        elif not message.reply_to_message and len(message.command) != 1:
+        else:
             user = message.text.split(None, 1)[1]
         info_caption, photo_id = await get_user_info(user)
         if not photo_id:

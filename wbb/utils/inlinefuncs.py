@@ -503,9 +503,7 @@ async def github_repo_func(answers, text):
     results = await asyncio.gather(fetch(URL), fetch(URL2))
     r = results[0]
     r1 = results[1]
-    commits = 0
-    for developer in r1:
-        commits += developer['contributions']
+    commits = sum(developer['contributions'] for developer in r1)
     buttons = InlineKeyboard(row_width=1)
     buttons.add(
         InlineKeyboardButton(
@@ -615,17 +613,14 @@ async def music_inline_func(answers, query):
             )
         )
         return answers
-    messages_ids_and_duration = []
-    for f_ in messages:
-        messages_ids_and_duration.append(
-            {"message_id": f_.message_id,
-                "duration": f_.audio.duration if f_.audio.duration else 0}
-        )
+    messages_ids_and_duration = [
+        {"message_id": f_.message_id, "duration": f_.audio.duration or 0}
+        for f_ in messages
+    ]
+
     messages = list(
         {v["duration"]: v for v in messages_ids_and_duration}.values())
-    messages_ids = []
-    for ff_ in messages:
-        messages_ids.append(ff_['message_id'])
+    messages_ids = [ff_['message_id'] for ff_ in messages]
     messages = await app.get_messages(chat_id, messages_ids[0:48])
     for message_ in messages:
         answers.append(
