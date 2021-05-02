@@ -23,14 +23,17 @@ SOFTWARE.
 """
 from wbb import app
 from wbb.core.decorators.errors import capture_err
+from wbb.modules.admin import member_permissions
 from wbb.utils.dbfunctions import (update_karma, get_karma, get_karmas,
-                                   int_to_alpha, alpha_to_int)
+                                   int_to_alpha, alpha_to_int, is_karma_on,
+                                   karma_on, karma_off)
 from wbb.utils.filter_groups import karma_positive_group, karma_negative_group
 from pyrogram import filters
 
 __MODULE__ = "Karma"
 __HELP__ = """[UPVOTE] - Use upvote keywords like "+", "+1", "thanks" etc to upvote a message.
 [DOWNVOTE] - Use downvote keywords like "-", "-1", etc to downvote a message.
+/karma_toggle [ON|OFF] - Enable or Disable Karma System In Your Chat.
 Reply to a message with /karma to check a user's karma
 Send /karma without replying to any message to chek karma list of top 10 users"""
 
@@ -52,6 +55,8 @@ regex_downvote = r"^(\-|\-\-|\-1|👎)$"
 )
 @capture_err
 async def upvote(_, message):
+    if not await is_karma_on(message.chat.id):
+        return
     if message.reply_to_message.from_user.id == message.from_user.id:
         return
     chat_id = message.chat.id
@@ -85,6 +90,8 @@ async def upvote(_, message):
 )
 @capture_err
 async def downvote(_, message):
+    if not await is_karma_on(message.chat.id):
+        return
     if message.reply_to_message.from_user.id == message.from_user.id:
         return
     chat_id = message.chat.id
@@ -140,3 +147,28 @@ async def karma(_, message):
         else:
             karma = 0
             await message.reply_text(f'**Total Points**: __{karma}__')
+
+
+@app.on_message(filters.command("karma_toggle") & ~filters.private)
+@capture_err
+async def captcha_state(_, message):
+    usage = "**Usage:**\n/karma_toggle [ON|OFF]"
+    if len(message.command) != 2:
+        await message.reply_text(usage)
+        return
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    permissions = await member_permissions(chat_id, user_id)
+    if "can_restrict_members" not in permissions:
+        await message.reply_text("You don't have enough permissions.")
+        return
+    state = message.text.split(None, 1)[1].strip()
+    state = state.lower()
+    if state == "on":
+        await karma_on(chat_id)
+        await message.reply_text("Enabled karma system.")
+    elif state == "off":
+        await karma_off(chat_id)
+        await message.reply_text("Disabled karma system.")
+    else:
+        await message.reply_text(usage)

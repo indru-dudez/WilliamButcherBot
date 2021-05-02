@@ -43,9 +43,10 @@ from pyrogram import __version__ as pyrover, filters
 from time import time, ctime
 from random import randint
 from wbb.utils.fetch import fetch
+from wbb.modules.user_info import get_user_info
 from wbb.modules.userbot import eval_executer_func
 from wbb.modules.music import download_youtube_audio
-from wbb.utils.functions import test_speedtest, get_http_status_code
+from wbb.utils.functions import test_speedtest, get_http_status_code, make_carbon
 from wbb.utils.formatter import convert_seconds_to_minutes as time_convert
 from wbb.utils.pastebin import paste
 from wbb.core.types import InlineQueryResultCachedDocument
@@ -63,7 +64,7 @@ async def inline_help_func(__HELP__):
         "wall", "yt", "torrent", "lyrics", "wiki",
         "speedtest", "eval", "music", "saavn", "deezer",
         "gh_repo", "gh_user", "search", "pastebin",
-        "nsfw_scan", "ytmusic"
+        "nsfw_scan", "ytmusic", "carbon"
     ]
     buttons.add(*[(InlineKeyboardButton(
         text=i, switch_inline_query_current_chat=i)) for i in keywords_list])
@@ -841,19 +842,74 @@ async def yt_music_func(answers, url, user_id):
         return answers
     title, performer, duration, audio, thumbnail = await download_youtube_audio(url)
     m = await app.send_audio(
-            MESSAGE_DUMP_CHAT,
-            audio_file,
-            title=title,
-            duration=duration,
-            performer=performer,
-            thumb=thumbnail
-            )
+        MESSAGE_DUMP_CHAT,
+        audio,
+        title=title,
+        duration=duration,
+        performer=performer,
+        thumb=thumbnail
+    )
     os.remove(audio)
     os.remove(thumbnail)
     answers.append(
         InlineQueryResultCachedDocument(
             title=title,
             file_id=m.audio.file_id
+        )
+    )
+    return answers
+
+
+async def carbon_inline_func(answers, link):
+    link = link.split("/")
+    if link[3] == "c":
+        chat, message_id = int("-100" + link[4]), int(link[5])
+    else:
+        chat, message_id = link[3], link[4]
+    m = await app.get_messages(chat, message_ids=int(message_id))
+    if not m.text and not m.document:
+        m = await app2.get_messages(chat, message_ids=int(message_id))
+    if m.text:
+        content = m.text
+    else:
+        if m.document.file_size > 1048576:
+            answers.append(
+                InlineQueryResultArticle(
+                    title="DOCUMENT TOO BIG",
+                    description="Maximum supported size is 1MB",
+                    input_message_content=InputTextMessageContent(
+                        "DOCUMENT TOO BIG")
+
+                )
+            )
+            return answers
+        doc = await m.download()
+        async with aiofiles.open(doc, mode="r") as f:
+            content = await f.read()
+        os.remove(doc)
+    image = await make_carbon(content)
+    link = await paste(content)
+    # To Pre-cache the media
+    carbon = await app.send_document(MESSAGE_DUMP_CHAT, image)
+    os.remove(image)
+    buttons = InlineKeyboard(row_width=1)
+    buttons.add(InlineKeyboardButton(text="Paste Link", url=link))
+    answers.append(
+        InlineQueryResultCachedDocument(
+            file_id=carbon.document.file_id,
+            title="Carbon",
+            reply_markup=buttons
+        )
+    )
+    return answers
+
+
+async def user_info_inline_func(answers, user):
+    caption, photo_id = await get_user_info(user)
+    answers.append(
+        InlineQueryResultArticle(
+            title="Found User.",
+            input_message_content=InputTextMessageContent(caption)
         )
     )
     return answers

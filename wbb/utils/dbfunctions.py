@@ -300,6 +300,17 @@ async def get_karmas_count() -> dict:
     }
 
 
+async def user_global_karma(user_id) -> int:
+    chats = karmadb.find({"chat_id": {"$lt": 0}})
+    if not chats:
+        return 0
+    total_karma = 0
+    for chat in await chats.to_list(length=1000000):
+        karma = await get_karma(chat['chat_id'], await int_to_alpha(user_id))
+        total_karma += int(karma['karma']) if karma else 0
+    return total_karma
+
+
 async def get_karmas(chat_id: int) -> Dict[str, int]:
     karma = await karmadb.find_one({"chat_id": chat_id})
     if karma:
@@ -329,6 +340,27 @@ async def update_karma(chat_id: int, name: str, karma: dict):
         },
         upsert=True
     )
+
+
+async def is_karma_on(chat_id: int) -> bool:
+    chat = await karmadb.find_one({"chat_id_toggle": chat_id})
+    if not chat:
+        return True
+    return False
+
+
+async def karma_on(chat_id: int):
+    is_karma = await is_karma_on(chat_id)
+    if is_karma:
+        return
+    return await karmadb.delete_one({"chat_id_toggle": chat_id})
+
+
+async def karma_off(chat_id: int):
+    is_karma = await is_karma_on(chat_id)
+    if not is_karma:
+        return
+    return await karmadb.insert_one({"chat_id_toggle": chat_id})
 
 
 """ Chats log functions """
@@ -501,8 +533,7 @@ async def disapprove_pmpermit(user_id: int):
 """ WELCOME FUNCTIONS """
 
 
-
-async def get_welcome(chat_id: int)-> str:
+async def get_welcome(chat_id: int) -> str:
     text = await welcomedb.find_one({"chat_id": chat_id})
     return text['text']
 

@@ -1,4 +1,6 @@
 ffmpeg-python
+spamwatch
+carbonnow
 aiohttp
 aiofiles
 cryptography
