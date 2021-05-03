@@ -252,10 +252,10 @@ async def callback_query_welcome_button(_, callback_query):
 
         """ send welcome message """
         await send_welcome_message(callback_query, pending_user_id)
-        return
     else:
         await callback_query.answer("This is not for you")
-        return
+
+    return
 
 
 async def kick_restricted_after_delay(delay, button_message: Message, user: User):

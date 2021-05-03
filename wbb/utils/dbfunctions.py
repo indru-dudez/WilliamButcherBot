@@ -59,18 +59,12 @@ async def get_notes_count() -> dict:
 
 async def _get_notes(chat_id: int) -> Dict[str, int]:
     _notes = await notesdb.find_one({"chat_id": chat_id})
-    if _notes:
-        _notes = _notes["notes"]
-    else:
-        _notes = {}
+    _notes = _notes["notes"] if _notes else {}
     return _notes
 
 
 async def get_note_names(chat_id: int) -> List[str]:
-    _notes = []
-    for note in await _get_notes(chat_id):
-        _notes.append(note)
-    return _notes
+    return [note for note in await _get_notes(chat_id)]
 
 
 async def get_note(chat_id: int, name: str) -> Union[bool, dict]:
@@ -137,18 +131,12 @@ async def get_filters_count() -> dict:
 
 async def _get_filters(chat_id: int) -> Dict[str, int]:
     _filters = await filtersdb.find_one({"chat_id": chat_id})
-    if _filters:
-        _filters = _filters['filters']
-    else:
-        _filters = {}
+    _filters = _filters['filters'] if _filters else {}
     return _filters
 
 
 async def get_filters_names(chat_id: int) -> List[str]:
-    _filters = []
-    for _filter in await _get_filters(chat_id):
-        _filters.append(_filter)
-    return _filters
+    return [_filter for _filter in await _get_filters(chat_id)]
 
 
 async def get_filter(chat_id: int, name: str) -> Union[bool, dict]:
@@ -198,11 +186,8 @@ async def delete_filter(chat_id: int, name: str) -> bool:
 
 async def int_to_alpha(user_id: int) -> str:
     alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]
-    text = ""
     user_id = str(user_id)
-    for i in user_id:
-        text += alphabet[int(i)]
-    return text
+    return "".join(alphabet[int(i)] for i in user_id)
 
 
 async def alpha_to_int(user_id_alphabet: str) -> int:
@@ -233,10 +218,7 @@ async def get_warns_count() -> dict:
 
 async def get_warns(chat_id: int) -> Dict[str, int]:
     warns = await warnsdb.find_one({"chat_id": chat_id})
-    if warns:
-        warns = warns['warns']
-    else:
-        warns = {}
+    warns = warns['warns'] if warns else {}
     return warns
 
 
@@ -313,10 +295,7 @@ async def user_global_karma(user_id) -> int:
 
 async def get_karmas(chat_id: int) -> Dict[str, int]:
     karma = await karmadb.find_one({"chat_id": chat_id})
-    if karma:
-        karma = karma['karma']
-    else:
-        karma = {}
+    karma = karma['karma'] if karma else {}
     return karma
 
 
@@ -344,9 +323,7 @@ async def update_karma(chat_id: int, name: str, karma: dict):
 
 async def is_karma_on(chat_id: int) -> bool:
     chat = await karmadb.find_one({"chat_id_toggle": chat_id})
-    if not chat:
-        return True
-    return False
+    return not chat
 
 
 async def karma_on(chat_id: int):
@@ -368,19 +345,14 @@ async def karma_off(chat_id: int):
 
 async def is_served_chat(chat_id: int) -> bool:
     chat = await chatsdb.find_one({"chat_id": chat_id})
-    if not chat:
-        return False
-    return True
+    return bool(chat)
 
 
 async def get_served_chats() -> list:
     chats = chatsdb.find({"chat_id": {'$lt': 0}})
     if not chats:
         return []
-    chats_list = []
-    for chat in await chats.to_list(length=1000000000):
-        chats_list.append(chat)
-    return chats_list
+    return [chat for chat in await chats.to_list(length=1000000000)]
 
 
 async def add_served_chat(chat_id: int):
@@ -408,9 +380,7 @@ async def get_gbans_count() -> int:
 
 async def is_gbanned_user(user_id: int) -> bool:
     user = await gbansdb.find_one({"user_id": user_id})
-    if not user:
-        return False
-    return True
+    return bool(user)
 
 
 async def add_gban_user(user_id: int):
@@ -431,10 +401,7 @@ async def remove_gban_user(user_id: int):
 
 async def _get_lovers(chat_id: int):
     lovers = await coupledb.find_one({"chat_id": chat_id})
-    if lovers:
-        lovers = lovers["couple"]
-    else:
-        lovers = {}
+    lovers = lovers["couple"] if lovers else {}
     return lovers
 
 
@@ -464,9 +431,7 @@ async def save_couple(chat_id: int, date: str, couple: dict):
 
 async def is_captcha_on(chat_id: int) -> bool:
     chat = await captchadb.find_one({"chat_id": chat_id})
-    if not chat:
-        return True
-    return False
+    return not chat
 
 
 async def captcha_on(chat_id: int):
@@ -487,9 +452,7 @@ async def captcha_off(chat_id: int):
 
 async def is_antiservice_on(chat_id: int) -> bool:
     chat = await antiservicedb.find_one({"chat_id": chat_id})
-    if not chat:
-        return True
-    return False
+    return not chat
 
 
 async def antiservice_on(chat_id: int):
@@ -511,9 +474,7 @@ async def antiservice_off(chat_id: int):
 
 async def is_pmpermit_approved(user_id: int) -> bool:
     user = await pmpermitdb.find_one({"user_id": user_id})
-    if not user:
-        return False
-    return True
+    return bool(user)
 
 
 async def approve_pmpermit(user_id: int):
@@ -559,9 +520,7 @@ async def del_welcome(chat_id: int):
 
 async def is_nsfw_on(chat_id: int) -> bool:
     chat = await nsfwdb.find_one({"chat_id": chat_id})
-    if not chat:
-        return True
-    return False
+    return not chat
 
 
 async def nsfw_on(chat_id: int):

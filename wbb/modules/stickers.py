@@ -90,7 +90,6 @@ async def kang(client, message):
             await msg.edit_text("Something wrong happened.")
             raise Exception(
                 f"Something went wrong while resizing the sticker (at {temp_file_path}); {e}")
-            return False
         sticker = await create_sticker(
                 await upload_document(
                     client,

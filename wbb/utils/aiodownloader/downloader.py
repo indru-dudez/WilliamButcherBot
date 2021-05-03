@@ -66,21 +66,20 @@ class DownloadJob:
 
         async with self._session.get(self.file_url) as resp:
             # Checkning the response code
-            if 200 <= resp.status < 300:
-                # Saving the data to the file chunk by chunk.
-                async with aiofiles.open(self.file_path, 'wb') as file:
-
-                    # Downloading the file using the aiohttp.StreamReader
-                    async for data in resp.content.iter_chunked(self._chunk_size):
-                        await file.write(data)
-                        self._downloaded(self._chunk_size)
-
-                self.completed = True
-                return self
-
-            else:
+            if not 200 <= resp.status < 300:
                 raise aiohttp.errors.HttpProcessingError(
                     message=f'There was a problem processing {self.file_url}', code=resp.status)
+
+            # Saving the data to the file chunk by chunk.
+            async with aiofiles.open(self.file_path, 'wb') as file:
+
+                # Downloading the file using the aiohttp.StreamReader
+                async for data in resp.content.iter_chunked(self._chunk_size):
+                    await file.write(data)
+                    self._downloaded(self._chunk_size)
+
+            self.completed = True
+            return self
 
 
 class Handler:

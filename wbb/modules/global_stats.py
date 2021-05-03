@@ -52,12 +52,10 @@ async def global_stats(_, message):
         disable_web_page_preview=True
     )
 
-    # For bot served chat and users count
-    served_chats = []
     total_users = 0
     chats = await get_served_chats()
-    for chat in chats:
-        served_chats.append(int(chat["chat_id"]))
+    # For bot served chat and users count
+    served_chats = [int(chat["chat_id"]) for chat in chats]
     await m.edit(
         f"__**Generating Statistics Report, Should Take {len(served_chats)*6}+ Seconds.**__",
         disable_web_page_preview=True
@@ -69,14 +67,12 @@ async def global_stats(_, message):
         except Exception:
             await remove_served_chat(served_chat)
             served_chats.remove(served_chat)
-            pass
     for i in served_chats:
         try:
             mc = (await app.get_chat(i)).members_count
             total_users += int(mc)
         except Exception:
             await remove_served_chat(served_chat)
-            pass
         await asyncio.sleep(2)
 
     # Gbans count
@@ -104,9 +100,7 @@ async def global_stats(_, message):
     url = "https://api.github.com/repos/thehamkercat/williambutcherbot/contributors"
     rurl = "https://github.com/thehamkercat/williambutcherbot"
     developers = await fetch(url)
-    commits = 0
-    for developer in developers:
-        commits += developer['contributions']
+    commits = sum(developer['contributions'] for developer in developers)
     developers = len(developers)
 
     # Modules info

@@ -140,7 +140,7 @@ async def purge(client, message):
                                                      message_ids=message_ids,
                                                      revoke=True)
                         message_ids = []
-                if len(message_ids) > 0:
+                if message_ids:
                     await client.delete_messages(
                         chat_id=chat_id,
                         message_ids=message_ids,
@@ -393,17 +393,16 @@ async def ban_deleted_accounts(_, message):
         permissions = await member_permissions(chat_id, from_user_id)
         if "can_restrict_members" in permissions or from_user_id in SUDOERS:
             deleted_users = []
-            banned_users = 0
             async for i in app.iter_chat_members(chat_id):
                 if i.user.is_deleted:
                     deleted_users.append(i.user.id)
-            if len(deleted_users) > 0:
+            if deleted_users:
+                banned_users = 0
                 for deleted_user in deleted_users:
                     try:
                         await message.chat.kick_member(deleted_user)
                     except Exception as e:
                         print(str(e))
-                        pass
                     banned_users += 1
                 await message.reply_text(f"Banned {banned_users} Deleted Accounts")
             else:

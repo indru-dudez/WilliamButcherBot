@@ -52,7 +52,7 @@ async def chatbot_status(_, message):
     status = message.text.split(None, 1)[1]
     chat_id = message.chat.id
 
-    if status == "ON" or status == "on" or status == "On":
+    if status in ["ON", "on", "On"]:
         if chat_id not in active_chats_bot:
             active_chats_bot.append(chat_id)
             text = "Chatbot Enabled Reply To Any Message " \
@@ -62,7 +62,7 @@ async def chatbot_status(_, message):
         await message.reply_text("ChatBot Is Already Enabled.")
         return
 
-    elif status == "OFF" or status == "off" or status == "Off":
+    elif status in ["OFF", "off", "Off"]:
         if chat_id in active_chats_bot:
             active_chats_bot.remove(chat_id)
             await message.reply_text("Chatbot Disabled!")
@@ -102,7 +102,7 @@ async def chatbot_status_ubot(_, message):
         return
     status = message.text.split(None, 1)[1]
     chat_id = message.chat.id
-    if status == "ON" or status == "on" or status == "On":
+    if status in ["ON", "on", "On"]:
         if chat_id not in active_chats_ubot:
             active_chats_ubot.append(chat_id)
             text = "Chatbot Enabled Reply To Any Message " \
@@ -112,7 +112,7 @@ async def chatbot_status_ubot(_, message):
         await message.edit("ChatBot Is Already Enabled.")
         return
 
-    elif status == "OFF" or status == "off" or status == "Off":
+    elif status in ["OFF", "off", "Off"]:
         if chat_id in active_chats_ubot:
             active_chats_ubot.remove(chat_id)
             await message.edit("Chatbot Disabled!")

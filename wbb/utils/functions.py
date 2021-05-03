@@ -49,10 +49,7 @@ def generate_captcha():
 
     # Generate a 4 letter word
     def gen_wrong_answer():
-        word = ""
-        for _ in range(4):
-            word += gen_letter()
-        return word
+        return "".join(gen_letter() for _ in range(4))
 
     # Generate 8 wrong captcha answers
     wrong_answers = []
